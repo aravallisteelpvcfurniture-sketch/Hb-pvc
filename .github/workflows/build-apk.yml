@@ -10,8 +10,10 @@ on:
 
 jobs:
   build-apk:
-    name: Assemble Debug & Release APKs
+    name: Build Aravalli Furniture APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -26,6 +28,9 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
       - name: Set up Gradle 9.3.1
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -37,25 +42,26 @@ jobs:
             base64 -d debug.keystore.base64 > debug.keystore
           fi
 
-      - name: Build Debug Installable APK
+      - name: Build Installable APK
         run: gradle :app:assembleDebug --stacktrace
 
-      - name: Prepare Debug APK Artifact
+      - name: Prepare APK output
         run: |
           mkdir -p artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk artifacts/Aravalli-Furniture-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk artifacts/Aravalli-Furniture.apk
 
-      - name: Upload Installable APK to GitHub Actions Artifacts
+      - name: Upload APK to GitHub Actions Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Aravalli-Furniture-APK
-          path: artifacts/Aravalli-Furniture-debug.apk
+          path: artifacts/Aravalli-Furniture.apk
           retention-days: 30
 
-      - name: Attach APK to GitHub Release (on version tag v*)
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publish Direct Download APK to GitHub Releases
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
-        permissions:
-          contents: write
         with:
-          files: artifacts/Aravalli-Furniture-debug.apk
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'latest' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || 'Aravalli Furniture Latest APK' }}
+          make_latest: true
+          files: artifacts/Aravalli-Furniture.apk

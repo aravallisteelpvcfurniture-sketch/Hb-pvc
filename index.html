@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aravalli Steel PVC Furniture — Android App Download</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #c26d2d;
+      --accent-hover: #d97706;
+      --text: #f8fafc;
+      --muted: #cbd5e1;
+      --green: #16a34a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      max-width: 520px;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid #334155;
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(194, 109, 45, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(194, 109, 45, 0.5);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 26px;
+      line-height: 1.25;
+    }
+    p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    .features {
+      background: rgba(15, 23, 42, 0.55);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      text-decoration: none;
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 15px 18px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #475569;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 14px;
+      padding: 12px 16px;
+    }
+    .status {
+      font-size: 13px;
+      color: #94a3b8;
+      text-align: center;
+      margin-top: 8px;
+    }
+    .status.ready { color: #4ade80; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <span class="badge">OFFICIAL ANDROID APP</span>
+    <h1>Aravalli Steel PVC Furniture</h1>
+    <p>
+      कस्टम स्टील अलमारी, वॉटरप्रूफ PVC मॉड्यूलर किचन, साइट मेज़रमेंट, AI ऑर्डर बॉट,
+      डिजिटल GST PDF बिल, लाइव ऑर्डर ट्रैकिंग और WhatsApp सपोर्ट ऐप।
+    </p>
+
+    <div class="features">
+      • कैटलॉग फोटो गैलरी व लाइव स्टॉक अपडेट<br />
+      • विज़िटर साइट मेज़रमेंट व AI रूम फोटो एनालाइज़र<br />
+      • UPI पेमेंट गेटवे और तुरंत PDF बिल डाउनलोड<br />
+      • ऑटोमैटिक ऑर्डर ट्रैकिंग और लाइव WhatsApp चैट
+    </div>
+
+    <a id="downloadBtn" class="btn" href="#">APK डाउनलोड करें (Download APK)</a>
+    <a id="actionsBtn" class="btn btn-secondary" href="#">GitHub Actions बिल्ड स्टेटस देखें</a>
+    <div id="statusText" class="status">नवीनतम APK लिंक जाँचा जा रहा है...</div>
+  </main>
+
+  <script>
+    (function () {
+      const host = window.location.hostname;
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      const owner = host.endsWith(".github.io")
+        ? host.replace(".github.io", "")
+        : "aravallisteelpvcfurniture-sketch";
+      const repo = parts.length > 0 ? parts[0] : "Hb-pvc";
+
+      const directApkUrl = `https://github.com/${owner}/${repo}/releases/latest/download/Aravalli-Furniture.apk`;
+      const actionsUrl = `https://github.com/${owner}/${repo}/actions`;
+      const releasesApi = `https://api.github.com/repos/${owner}/${repo}/releases/latest`;
+
+      const downloadBtn = document.getElementById("downloadBtn");
+      const actionsBtn = document.getElementById("actionsBtn");
+      const statusText = document.getElementById("statusText");
+
+      downloadBtn.href = directApkUrl;
+      actionsBtn.href = actionsUrl;
+
+      fetch(releasesApi)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && Array.isArray(data.assets)) {
+            const apk = data.assets.find((a) => a.name && a.name.endsWith(".apk"));
+            if (apk && apk.browser_download_url) {
+              downloadBtn.href = apk.browser_download_url;
+              const mb = (apk.size / (1024 * 1024)).toFixed(1);
+              statusText.textContent = `APK डाउनलोड के लिए तैयार है (${mb} MB)`;
+              statusText.classList.add("ready");
+              return;
+            }
+          }
+          statusText.textContent =
+            "यदि डाउनलोड शुरू न हो, तो पहले GitHub Actions में Build पूरा होने की प्रतीक्षा करें।";
+        })
+        .catch(() => {
+          statusText.textContent =
+            "GitHub Releases से सीधे APK डाउनलोड करने के लिए ऊपर बटन दबाएँ।";
+        });
+    })();
+  </script>
+</body>
+</html>
