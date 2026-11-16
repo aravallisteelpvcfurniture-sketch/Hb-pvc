@@ -13,6 +13,7 @@
       --text: #f8fafc;
       --muted: #cbd5e1;
       --green: #16a34a;
+      --green-hover: #15803d;
     }
     * { box-sizing: border-box; }
     body {
@@ -82,6 +83,13 @@
       transition: background 0.2s;
     }
     .btn:hover { background: var(--accent-hover); }
+    .btn.ready { background: var(--green); }
+    .btn.ready:hover { background: var(--green-hover); }
+    .btn.disabled {
+      background: #475569;
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
     .btn-secondary {
       background: transparent;
       border: 1px solid #475569;
@@ -95,8 +103,10 @@
       color: #94a3b8;
       text-align: center;
       margin-top: 8px;
+      line-height: 1.5;
     }
     .status.ready { color: #4ade80; }
+    .status.warn { color: #fbbf24; }
   </style>
 </head>
 <body>
@@ -115,9 +125,9 @@
       • ऑटोमैटिक ऑर्डर ट्रैकिंग और लाइव WhatsApp चैट
     </div>
 
-    <a id="downloadBtn" class="btn" href="#">APK डाउनलोड करें (Download APK)</a>
+    <a id="downloadBtn" class="btn disabled" href="#">APK बिल्ड जाँचा जा रहा है...</a>
     <a id="actionsBtn" class="btn btn-secondary" href="#">GitHub Actions बिल्ड स्टेटस देखें</a>
-    <div id="statusText" class="status">नवीनतम APK लिंक जाँचा जा रहा है...</div>
+    <div id="statusText" class="status">कृपया प्रतीक्षा करें...</div>
   </main>
 
   <script>
@@ -129,15 +139,14 @@
         : "aravallisteelpvcfurniture-sketch";
       const repo = parts.length > 0 ? parts[0] : "Hb-pvc";
 
-      const directApkUrl = `https://github.com/${owner}/${repo}/releases/latest/download/Aravalli-Furniture.apk`;
       const actionsUrl = `https://github.com/${owner}/${repo}/actions`;
+      const releasesUrl = `https://github.com/${owner}/${repo}/releases`;
       const releasesApi = `https://api.github.com/repos/${owner}/${repo}/releases/latest`;
 
       const downloadBtn = document.getElementById("downloadBtn");
       const actionsBtn = document.getElementById("actionsBtn");
       const statusText = document.getElementById("statusText");
 
-      downloadBtn.href = directApkUrl;
       actionsBtn.href = actionsUrl;
 
       fetch(releasesApi)
@@ -147,18 +156,27 @@
             const apk = data.assets.find((a) => a.name && a.name.endsWith(".apk"));
             if (apk && apk.browser_download_url) {
               downloadBtn.href = apk.browser_download_url;
+              downloadBtn.classList.remove("disabled");
+              downloadBtn.classList.add("ready");
               const mb = (apk.size / (1024 * 1024)).toFixed(1);
-              statusText.textContent = `APK डाउनलोड के लिए तैयार है (${mb} MB)`;
+              downloadBtn.textContent = `APK डाउनलोड करें (${mb} MB)`;
+              statusText.textContent = "APK तैयार है! ऊपर हरे बटन पर टैप करके डाउनलोड व इंस्टॉल करें।";
               statusText.classList.add("ready");
               return;
             }
           }
+          downloadBtn.href = actionsUrl;
+          downloadBtn.classList.remove("disabled");
+          downloadBtn.textContent = "Actions में बिल्ड स्टेटस देखें";
           statusText.textContent =
-            "यदि डाउनलोड शुरू न हो, तो पहले GitHub Actions में Build पूरा होने की प्रतीक्षा करें।";
+            "अभी कोई Release APK उपलब्ध नहीं है। ऊपर Actions में बिल्ड पूरा (✓) होने के बाद यह पेज रीफ्रेश करें।";
+          statusText.classList.add("warn");
         })
         .catch(() => {
-          statusText.textContent =
-            "GitHub Releases से सीधे APK डाउनलोड करने के लिए ऊपर बटन दबाएँ।";
+          downloadBtn.href = releasesUrl;
+          downloadBtn.classList.remove("disabled");
+          downloadBtn.textContent = "GitHub Releases खोलें";
+          statusText.textContent = "डाउनलोड के लिए GitHub Releases पेज देखें।";
         });
     })();
   </script>
