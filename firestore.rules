@@ -1,0 +1,226 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: deny everything by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- GLOBAL HARDENED PRIMITIVES ---
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        ('email' in request.auth.token &&
+         'email_verified' in request.auth.token &&
+         request.auth.token.email == 'harishpatelh450@gmail.com' &&
+         request.auth.token.email_verified == true)
+      );
+    }
+
+    // --- VALIDATION HELPERS ---
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.email is string && data.email.size() >= 3 && data.email.size() <= 120 &&
+             data.role == 'customer' &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() <= 20)) &&
+             (!('address' in data) || (data.address is string && data.address.size() <= 250)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidInventoryItem(data) {
+      return data.sku is string && data.sku.size() >= 2 && data.sku.size() <= 40 &&
+             data.name is string && data.name.size() >= 2 && data.name.size() <= 120 &&
+             data.category in ['Steel Almirah', 'PVC Kitchen', 'UPVC Doors', 'Office & Modular', 'Custom Fabrication'] &&
+             data.material is string && data.material.size() >= 2 && data.material.size() <= 120 &&
+             data.dimensions is string && data.dimensions.size() >= 2 && data.dimensions.size() <= 80 &&
+             data.priceInr is number && data.priceInr > 0 && data.priceInr <= 10000000 &&
+             data.stockQty is int && data.stockQty >= 0 && data.stockQty <= 100000 &&
+             data.reorderLevel is int && data.reorderLevel >= 0 && data.reorderLevel <= 10000 &&
+             data.imageKey is string && data.imageKey.size() >= 2 && data.imageKey.size() <= 60 &&
+             data.description is string && data.description.size() >= 2 && data.description.size() <= 500 &&
+             data.isAvailable is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidMeasurementRequest(data) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 80 &&
+             data.phone is string && data.phone.size() >= 6 && data.phone.size() <= 20 &&
+             data.address is string && data.address.size() >= 3 && data.address.size() <= 250 &&
+             data.furnitureType is string && data.furnitureType.size() >= 2 && data.furnitureType.size() <= 80 &&
+             data.roomArea is string && data.roomArea.size() >= 2 && data.roomArea.size() <= 80 &&
+             data.widthFt is number && data.widthFt > 0 && data.widthFt <= 100 &&
+             data.heightFt is number && data.heightFt > 0 && data.heightFt <= 100 &&
+             data.depthFt is number && data.depthFt > 0 && data.depthFt <= 100 &&
+             data.preferredDate is string && data.preferredDate.size() >= 4 && data.preferredDate.size() <= 40 &&
+             data.preferredSlot is string && data.preferredSlot.size() >= 3 && data.preferredSlot.size() <= 40 &&
+             data.status in ['scheduled', 'measured', 'quoted', 'converted'] &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidFurnitureOrder(data) {
+      return data.orderNumber is string && data.orderNumber.size() >= 4 && data.orderNumber.size() <= 40 &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.customerName is string && data.customerName.size() >= 1 && data.customerName.size() <= 80 &&
+             data.phone is string && data.phone.size() >= 6 && data.phone.size() <= 20 &&
+             data.deliveryAddress is string && data.deliveryAddress.size() >= 3 && data.deliveryAddress.size() <= 250 &&
+             data.itemSummary is string && data.itemSummary.size() >= 2 && data.itemSummary.size() <= 300 &&
+             data.itemSku is string && data.itemSku.size() >= 2 && data.itemSku.size() <= 40 &&
+             data.quantity is int && data.quantity >= 1 && data.quantity <= 100 &&
+             data.customDimensions is string && data.customDimensions.size() >= 2 && data.customDimensions.size() <= 100 &&
+             data.subtotalInr is number && data.subtotalInr > 0 && data.subtotalInr <= 50000000 &&
+             data.gstInr is number && data.gstInr >= 0 && data.gstInr <= 10000000 &&
+             data.totalInr is number && data.totalInr > 0 && data.totalInr <= 60000000 &&
+             data.paymentMethod in ['UPI', 'Card/NetBanking', 'Cash on Delivery'] &&
+             data.paymentStatus in ['pending', 'paid_upi', 'paid_gateway', 'cod_pending'] &&
+             (!('paymentRef' in data) || (data.paymentRef is string && data.paymentRef.size() <= 80)) &&
+             data.trackingStage in ['Order Confirmed', 'Measurement Verified', 'In Fabrication', 'Quality Check', 'Out for Delivery', 'Delivered'] &&
+             data.estimatedDays is int && data.estimatedDays >= 1 && data.estimatedDays <= 90 &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 500)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // --- ADMINS (Read-only lookup; cannot be written by clients) ---
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && request.auth.uid == adminId;
+      allow list, create, update, delete: if false;
+    }
+
+    // --- USERS (PII isolated to owner or admin) ---
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().keys().hasAll(['userId', 'displayName', 'email', 'role', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'displayName', 'email', 'phone', 'address', 'role', 'createdAt', 'updatedAt']) &&
+                       isValidUserProfile(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       isValidUserProfile(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().role == existing().role &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'phone', 'address', 'updatedAt']);
+
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    // --- INVENTORY (Catalog readable by signed-in users; full management by Admin; stock decrement on checkout) ---
+    match /inventory/{itemId} {
+      allow get: if isSignedIn() && isValidId(itemId);
+      allow list: if isSignedIn();
+
+      allow create: if isAdmin() &&
+                       isValidId(itemId) &&
+                       incoming().keys().hasAll(['sku', 'name', 'category', 'material', 'dimensions', 'priceInr', 'stockQty', 'reorderLevel', 'imageKey', 'description', 'isAvailable', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['sku', 'name', 'category', 'material', 'dimensions', 'priceInr', 'stockQty', 'reorderLevel', 'imageKey', 'description', 'isAvailable', 'createdAt', 'updatedAt']) &&
+                       isValidInventoryItem(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(itemId) &&
+                       isValidInventoryItem(incoming()) &&
+                       incoming().createdAt == existing().createdAt && (
+                         isAdmin() ||
+                         (
+                           incoming().diff(existing()).affectedKeys().hasOnly(['stockQty', 'isAvailable', 'updatedAt']) &&
+                           incoming().stockQty >= 0 &&
+                           incoming().stockQty < existing().stockQty
+                         )
+                       );
+
+      allow delete: if isAdmin() && isValidId(itemId);
+    }
+
+    // --- MEASUREMENTS (Visitor bookings isolated per owner + Admin) ---
+    match /measurements/{measurementId} {
+      allow get: if isSignedIn() && isValidId(measurementId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(measurementId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().status == 'scheduled' &&
+                       incoming().keys().hasAll(['userId', 'customerName', 'phone', 'address', 'furnitureType', 'roomArea', 'widthFt', 'heightFt', 'depthFt', 'preferredDate', 'preferredSlot', 'status', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'customerName', 'phone', 'address', 'furnitureType', 'roomArea', 'widthFt', 'heightFt', 'depthFt', 'preferredDate', 'preferredSlot', 'notes', 'status', 'createdAt', 'updatedAt']) &&
+                       isValidMeasurementRequest(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(measurementId) &&
+                       isValidMeasurementRequest(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt && (
+                         isAdmin() ||
+                         (
+                           existing().userId == request.auth.uid &&
+                           existing().status == 'scheduled' &&
+                           incoming().diff(existing()).affectedKeys().hasOnly(['preferredDate', 'preferredSlot', 'notes', 'widthFt', 'heightFt', 'depthFt', 'updatedAt'])
+                         )
+                       );
+
+      allow delete: if isSignedIn() &&
+                       isValidId(measurementId) &&
+                       (isAdmin() || (existing().userId == request.auth.uid && existing().status == 'scheduled'));
+    }
+
+    // --- ORDERS (Isolated per owner + Admin; terminal state locked on Delivered for non-admin) ---
+    match /orders/{orderId} {
+      allow get: if isSignedIn() && isValidId(orderId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+                       isValidId(orderId) &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().trackingStage == 'Order Confirmed' &&
+                       incoming().keys().hasAll(['orderNumber', 'userId', 'customerName', 'phone', 'deliveryAddress', 'itemSummary', 'itemSku', 'quantity', 'customDimensions', 'subtotalInr', 'gstInr', 'totalInr', 'paymentMethod', 'paymentStatus', 'trackingStage', 'estimatedDays', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['orderNumber', 'userId', 'customerName', 'phone', 'deliveryAddress', 'itemSummary', 'itemSku', 'quantity', 'customDimensions', 'subtotalInr', 'gstInr', 'totalInr', 'paymentMethod', 'paymentStatus', 'paymentRef', 'trackingStage', 'estimatedDays', 'notes', 'createdAt', 'updatedAt']) &&
+                       isValidFurnitureOrder(incoming());
+
+      allow update: if isSignedIn() &&
+                       isValidId(orderId) &&
+                       isValidFurnitureOrder(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().orderNumber == existing().orderNumber &&
+                       incoming().createdAt == existing().createdAt && (
+                         isAdmin() ||
+                         (
+                           existing().userId == request.auth.uid &&
+                           existing().trackingStage != 'Delivered' &&
+                           existing().paymentStatus in ['pending', 'cod_pending'] &&
+                           incoming().diff(existing()).affectedKeys().hasOnly(['paymentMethod', 'paymentStatus', 'paymentRef', 'updatedAt'])
+                         )
+                       );
+
+      allow delete: if isAdmin() && isValidId(orderId);
+    }
+  }
+}

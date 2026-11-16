@@ -1,0 +1,6 @@
+{
+  "name": "Aravalli Furniture",
+  "description": "Business, custom measurement, catalog gallery, AI order assistant, automated order tracking, inventory management, PDF invoicing, UPI checkout, and WhatsApp support app for Aravalli Steel PVC Furniture.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

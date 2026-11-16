@@ -1,0 +1,292 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Signed-in customer or shop owner profile for Aravalli Steel PVC Furniture.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Customer display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "Google account email address."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Customer WhatsApp/contact phone number."
+        },
+        "address": {
+          "type": "string",
+          "description": "Default delivery and site-visit address."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["customer"],
+          "description": "Client-assigned role (always customer on self-registration)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when last updated via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "displayName", "email", "role", "createdAt", "updatedAt"]
+    },
+    "InventoryItem": {
+      "title": "InventoryItem",
+      "description": "Real-time Steel & PVC furniture catalog and stock item.",
+      "type": "object",
+      "properties": {
+        "sku": {
+          "type": "string",
+          "description": "Unique product SKU code."
+        },
+        "name": {
+          "type": "string",
+          "description": "Product display title."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Steel Almirah", "PVC Kitchen", "UPVC Doors", "Office & Modular", "Custom Fabrication"],
+          "description": "Furniture category."
+        },
+        "material": {
+          "type": "string",
+          "description": "Primary build material specification."
+        },
+        "dimensions": {
+          "type": "string",
+          "description": "Standard dimensions in feet/inches."
+        },
+        "priceInr": {
+          "type": "number",
+          "description": "Unit price in INR excluding GST."
+        },
+        "stockQty": {
+          "type": "integer",
+          "description": "Live available units in workshop inventory."
+        },
+        "reorderLevel": {
+          "type": "integer",
+          "description": "Low-stock alert threshold."
+        },
+        "imageKey": {
+          "type": "string",
+          "description": "Drawable resource key for product photo."
+        },
+        "description": {
+          "type": "string",
+          "description": "Product marketing & craftsmanship highlights."
+        },
+        "isAvailable": {
+          "type": "boolean",
+          "description": "Whether item is active for customer orders."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["sku", "name", "category", "material", "dimensions", "priceInr", "stockQty", "reorderLevel", "imageKey", "description", "isAvailable", "createdAt", "updatedAt"]
+    },
+    "MeasurementRequest": {
+      "title": "MeasurementRequest",
+      "description": "Visitor site-measurement booking and room dimension record.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the requesting customer."
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Visitor/customer name."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone for site-visit coordination."
+        },
+        "address": {
+          "type": "string",
+          "description": "Site address for measurement."
+        },
+        "furnitureType": {
+          "type": "string",
+          "description": "Requested steel or PVC furniture category."
+        },
+        "roomArea": {
+          "type": "string",
+          "description": "Room or location (Kitchen, Master Bedroom, Office)."
+        },
+        "widthFt": {
+          "type": "number",
+          "description": "Estimated width in feet."
+        },
+        "heightFt": {
+          "type": "number",
+          "description": "Estimated height in feet."
+        },
+        "depthFt": {
+          "type": "number",
+          "description": "Estimated depth in feet."
+        },
+        "preferredDate": {
+          "type": "string",
+          "description": "Preferred visit date."
+        },
+        "preferredSlot": {
+          "type": "string",
+          "description": "Preferred visit time slot."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Custom finishes, hinges, or AI room notes."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["scheduled", "measured", "quoted", "converted"],
+          "description": "Measurement workflow state."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "customerName", "phone", "address", "furnitureType", "roomArea", "widthFt", "heightFt", "depthFt", "preferredDate", "preferredSlot", "status", "createdAt", "updatedAt"]
+    },
+    "FurnitureOrder": {
+      "title": "FurnitureOrder",
+      "description": "Confirmed customer furniture order, payment status, tracking stage, and GST invoice totals.",
+      "type": "object",
+      "properties": {
+        "orderNumber": {
+          "type": "string",
+          "description": "Human-readable invoice and order code."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the ordering customer."
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Billing customer name."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Customer phone number."
+        },
+        "deliveryAddress": {
+          "type": "string",
+          "description": "Shipping and installation address."
+        },
+        "itemSummary": {
+          "type": "string",
+          "description": "Line-item description for order and PDF bill."
+        },
+        "itemSku": {
+          "type": "string",
+          "description": "Primary catalog SKU or CUSTOM."
+        },
+        "quantity": {
+          "type": "integer",
+          "description": "Total units ordered."
+        },
+        "customDimensions": {
+          "type": "string",
+          "description": "Custom or standard build dimensions."
+        },
+        "subtotalInr": {
+          "type": "number",
+          "description": "Taxable subtotal in INR."
+        },
+        "gstInr": {
+          "type": "number",
+          "description": "18% GST amount in INR."
+        },
+        "totalInr": {
+          "type": "number",
+          "description": "Grand total invoice amount in INR."
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["UPI", "Card/NetBanking", "Cash on Delivery"],
+          "description": "Selected payment method."
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["pending", "paid_upi", "paid_gateway", "cod_pending"],
+          "description": "Payment verification status."
+        },
+        "paymentRef": {
+          "type": "string",
+          "description": "UPI UTR or payment gateway reference."
+        },
+        "trackingStage": {
+          "type": "string",
+          "enum": ["Order Confirmed", "Measurement Verified", "In Fabrication", "Quality Check", "Out for Delivery", "Delivered"],
+          "description": "Automated order tracking stage."
+        },
+        "estimatedDays": {
+          "type": "integer",
+          "description": "Estimated days to delivery/installation."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional order or finish notes."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["orderNumber", "userId", "customerName", "phone", "deliveryAddress", "itemSummary", "itemSku", "quantity", "customDimensions", "subtotalInr", "gstInr", "totalInr", "paymentMethod", "paymentStatus", "trackingStage", "estimatedDays", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Customer profile records isolated per authenticated user."
+    },
+    "/inventory/{itemId}": {
+      "schema": { "$ref": "#/entities/InventoryItem" },
+      "description": "Real-time workshop furniture catalog and stock levels."
+    },
+    "/measurements/{measurementId}": {
+      "schema": { "$ref": "#/entities/MeasurementRequest" },
+      "description": "Visitor site-measurement bookings isolated per customer and accessible to shop admin."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/FurnitureOrder" },
+      "description": "Confirmed orders, payments, tracking milestones, and invoice data."
+    }
+  }
+}
